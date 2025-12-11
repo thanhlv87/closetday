@@ -1,6 +1,6 @@
 # ClosetDay — Nhật ký phối đồ
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/thanhlv87/closetday)
 
 ClosetDay is a modern web application designed to help users capture, upload, and organize their daily outfits. It serves as a personal outfit journal, allowing users to take photos or upload images of their daily attire, add tags and metadata, store them by date, and browse through their wardrobe history across days, weeks, months, and years. Built with a minimalist aesthetic emphasizing clean whitespace, warm gradients, and smooth mobile-first interactions, ClosetDay provides an intuitive experience for fashion enthusiasts to track and revisit their style choices.
 
@@ -152,7 +152,7 @@ wrangler pages publish --project-name=your-project dist
 ```
 (Adjust for Pages if using static assets.)
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/thanhlv87/closetday)
 
 ### Production Tips
 
