@@ -6,21 +6,36 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OutfitCard } from '@/components/OutfitCard';
-import { MOCK_OUTFITS } from '@shared/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster } from '@/components/ui/sonner';
 import { Link } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+import type { Outfit } from '@shared/types';
 const FADE_IN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
 };
 export function GalleryPage() {
-  const [outfits, setOutfits] = useState(MOCK_OUTFITS.sort((a, b) => b.date - a.date));
-  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['outfits'],
+    queryFn: ({ pageParam = null }) => api<{ items: Outfit[]; next: string | null }>(`/api/outfits?cursor=${pageParam || ''}`),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.next,
+  });
+  const allOutfits = useMemo(() => data?.pages.flatMap(page => page.items) ?? [], [data]);
   const filteredOutfits = useMemo(() => {
-    let sorted = [...outfits];
+    let sorted = [...allOutfits];
     if (sortOrder === 'newest') {
       sorted.sort((a, b) => b.date - a.date);
     } else {
@@ -31,14 +46,7 @@ export function GalleryPage() {
       outfit.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
       outfit.notes?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [outfits, searchTerm, sortOrder]);
-  const loadMore = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      // This is a mock, in a real app you'd fetch more data
-      setIsLoading(false);
-    }, 1500);
-  };
+  }, [allOutfits, searchTerm, sortOrder]);
   return (
     <div className="min-h-screen bg-background">
       <ThemeToggle className="fixed top-4 right-4 z-50" />
@@ -85,28 +93,35 @@ export function GalleryPage() {
               </SelectContent>
             </Select>
           </motion.div>
-          <AnimatePresence>
-            <motion.div
-              layout
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
-            >
-              {filteredOutfits.map((outfit) => (
-                <motion.div layout key={outfit.id} initial="hidden" animate="visible" exit="hidden" variants={FADE_IN_VARIANTS}>
-                  <OutfitCard outfit={outfit} />
-                </motion.div>
-              ))}
-              {isLoading && Array.from({ length: 4 }).map((_, i) => (
+          {status === 'pending' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
+              {Array.from({ length: 8 }).map((_, i) => (
                 <div key={`skeleton-${i}`} className="space-y-2">
                   <Skeleton className="aspect-[3/4] rounded-2xl" />
                   <Skeleton className="h-4 w-3/4" />
                   <Skeleton className="h-4 w-1/2" />
                 </div>
               ))}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          ) : status === 'error' ? (
+            <div className="text-center text-destructive">Error: {error.message}</div>
+          ) : (
+            <AnimatePresence>
+              <motion.div
+                layout
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+              >
+                {filteredOutfits.map((outfit) => (
+                  <motion.div layout key={outfit.id} initial="hidden" animate="visible" exit="hidden" variants={FADE_IN_VARIANTS}>
+                    <OutfitCard outfit={outfit} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )}
           <div className="mt-12 text-center">
-            <Button onClick={loadMore} variant="outline" disabled={isLoading}>
-              {isLoading ? 'Đang tải...' : 'Tải thêm'}
+            <Button onClick={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
+              {isFetchingNextPage ? 'Đang tải...' : hasNextPage ? 'Tải thêm' : 'Không còn trang phục'}
             </Button>
           </div>
         </div>

@@ -12,14 +12,56 @@ import { CameraUploader } from '@/components/CameraUploader';
 import { Toaster, toast } from '@/components/ui/sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+import type { Outfit } from '@shared/types';
+import imageCompression from 'browser-image-compression';
+type NewOutfitPayload = Omit<Outfit, 'id'>;
 export function EditorPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [tags, setTags] = useState<string[]>([]);
   const [currentTag, setCurrentTag] = useState('');
   const [notes, setNotes] = useState('');
-  const [images, setImages] = useState<File[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const saveMutation = useMutation({
+    mutationFn: async (newOutfit: NewOutfitPayload) => {
+      const compressedImages = await Promise.all(
+        imageFiles.map(async (file) => {
+          try {
+            const options = {
+              maxSizeMB: 1.5,
+              maxWidthOrHeight: 1920,
+              useWebWorker: true,
+            };
+            const compressedFile = await imageCompression(file, options);
+            return new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = (error) => reject(error);
+              reader.readAsDataURL(compressedFile);
+            });
+          } catch (error) {
+            toast.error('Lỗi nén ảnh.');
+            throw error;
+          }
+        })
+      );
+      return api<Outfit>('/api/outfits', {
+        method: 'POST',
+        body: JSON.stringify({ ...newOutfit, images: compressedImages }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['outfits'] });
+      toast.success('Lưu trang phục thành công!');
+      navigate('/gallery');
+    },
+    onError: (error) => {
+      toast.error(`Lưu thất bại: ${error.message}`);
+    },
+  });
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && currentTag.trim()) {
       e.preventDefault();
@@ -33,7 +75,7 @@ export function EditorPage() {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
   const handleSave = () => {
-    if (images.length === 0) {
+    if (imageFiles.length === 0) {
       toast.error('Vui lòng thêm ít nhất một ảnh.');
       return;
     }
@@ -41,22 +83,12 @@ export function EditorPage() {
       toast.error('Vui lòng chọn ngày.');
       return;
     }
-    setIsSaving(true);
-    // In a real app, you'd upload files and send data to the backend.
-    // Here, we just simulate a save.
-    const newOutfit = {
-      id: uuidv4(),
+    saveMutation.mutate({
       date: date.getTime(),
-      images: images.map(file => URL.createObjectURL(file)), // For demo purposes
+      images: [], // Placeholder, will be replaced by compressed base64
       tags,
       notes,
-    };
-    console.log('Saving outfit:', newOutfit);
-    setTimeout(() => {
-      setIsSaving(false);
-      toast.success('Lưu trang phục thành công!');
-      navigate('/gallery');
-    }, 1500);
+    });
   };
   return (
     <div className="min-h-screen bg-background">
@@ -72,7 +104,7 @@ export function EditorPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold">Ảnh</h2>
-              <CameraUploader onImagesChange={setImages} />
+              <CameraUploader onImagesChange={setImageFiles} />
             </div>
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold">Thông tin</h2>
@@ -134,9 +166,9 @@ export function EditorPage() {
                   className="mt-2"
                 />
               </div>
-              <Button onClick={handleSave} disabled={isSaving} className="w-full btn-gradient">
+              <Button onClick={handleSave} disabled={saveMutation.isPending} className="w-full btn-gradient">
                 <Save className="mr-2 h-4 w-4" />
-                {isSaving ? 'Đang lưu...' : 'Lưu trang phục'}
+                {saveMutation.isPending ? 'Đang lưu...' : 'Lưu trang phục'}
               </Button>
             </div>
           </div>

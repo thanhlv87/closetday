@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Edit, Tag, Trash2, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Tag, Trash2, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,15 +8,50 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MOCK_OUTFITS } from '@shared/mock-data';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster, toast } from '@/components/ui/sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+import type { Outfit } from '@shared/types';
+import { Skeleton } from '@/components/ui/skeleton';
 export function OutfitDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const outfit = useMemo(() => MOCK_OUTFITS.find(o => o.id === id), [id]);
+  const queryClient = useQueryClient();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  if (!outfit) {
+  const { data: outfit, isLoading, isError } = useQuery({
+    queryKey: ['outfit', id],
+    queryFn: () => api<Outfit>(`/api/outfits/${id}`),
+    enabled: !!id,
+  });
+  const deleteMutation = useMutation({
+    mutationFn: () => api(`/api/outfits/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['outfits'] });
+      toast.success('Đã xoá trang phục.');
+      navigate('/gallery');
+    },
+    onError: (error) => {
+      toast.error(`Xoá thất bại: ${error.message}`);
+    },
+  });
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-5xl mx-auto">
+          <Skeleton className="h-10 w-1/3 mb-8" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Skeleton className="aspect-[3/4] rounded-2xl" />
+            <div className="space-y-6">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  if (isError || !outfit) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
         <div className="text-center">
@@ -27,18 +62,9 @@ export function OutfitDetail() {
       </div>
     );
   }
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
-  };
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
-  };
-  const handleDelete = () => {
-    // Mock deletion
-    console.log(`Deleting outfit ${outfit.id}`);
-    toast.success('Đã xoá trang phục.');
-    navigate('/gallery');
-  };
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
+  const handleDelete = () => deleteMutation.mutate();
   return (
     <div className="min-h-screen bg-background">
       <ThemeToggle className="fixed top-4 right-4 z-50" />
@@ -103,17 +129,17 @@ export function OutfitDetail() {
                   <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Sửa</Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4" /> Xoá</Button>
+                      <Button variant="destructive" disabled={deleteMutation.isPending}><Trash2 className="mr-2 h-4 w-4" /> Xoá</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Bạn có ch���c chắn?</AlertDialogTitle>
+                        <AlertDialogTitle>Bạn có chắc chắn?</AlertDialogTitle>
                         <AlertDialogDescription>
                           Hành động này không thể hoàn tác. Trang phục sẽ bị xoá vĩnh viễn.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Hu��</AlertDialogCancel>
+                        <AlertDialogCancel>Huỷ</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete}>Tiếp tục</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

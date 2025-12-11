@@ -23,7 +23,7 @@ export interface ChatMessage {
 export interface Outfit {
   id: string;
   date: number; // epoch millis
-  images: string[];
+  images: string[]; // Can be URLs (for seeding) or base64 data URLs (for uploads)
   tags: string[];
   notes?: string;
 }

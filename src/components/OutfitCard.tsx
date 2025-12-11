@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Outfit } from '@shared/types';
 interface OutfitCardProps {
@@ -20,7 +21,7 @@ export function OutfitCard({ outfit, className }: OutfitCardProps) {
     >
       <Link to={`/outfits/${outfit.id}`} className="block h-full">
         <Card className={cn("overflow-hidden rounded-2xl shadow-soft hover:shadow-lg transition-shadow duration-300 h-full flex flex-col", className)}>
-          <div className="relative aspect-[3/4] w-full overflow-hidden">
+          <div className="relative aspect-[3/4] w-full overflow-hidden group">
             <img
               src={outfit.images[0]}
               alt="Outfit"
