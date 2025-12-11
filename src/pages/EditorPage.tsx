@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
-import imageCompression from 'browser-image-compression';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { useIsMobile } from '@/hooks/use-mobile';
 type NewOutfitPayload = Omit<Outfit, 'id'>;
@@ -49,6 +49,7 @@ export function EditorPage() {
       const compressedImages = await Promise.all(
         imageFiles.map(async (file) => {
           try {
+            const { default: imageCompression } = await import('browser-image-compression');
             const options = {
               maxSizeMB: 1.5,
               maxWidthOrHeight: 1920,

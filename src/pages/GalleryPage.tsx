@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LayoutGrid, List, Search, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,10 +24,10 @@ const FADE_IN_VARIANTS = {
   }),
 };
 export function GalleryPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('newest');
-  const [viewMode, setViewMode] = useState('grid');
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = React.useState('');
+  const [sortOrder, setSortOrder] = React.useState('newest');
+  const [viewMode, setViewMode] = React.useState('grid');
   const isMobile = useIsMobile();
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
   const {
@@ -43,8 +43,8 @@ export function GalleryPage() {
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.next,
   });
-  const allOutfits = useMemo(() => data?.pages.flatMap(page => page.items) ?? [], [data]);
-  const filteredOutfits = useMemo(() => {
+  const allOutfits = React.useMemo(() => data?.pages.flatMap(page => page.items) ?? [], [data]);
+  const filteredOutfits = React.useMemo(() => {
     let sorted = [...allOutfits];
     if (sortOrder === 'newest') {
       sorted.sort((a, b) => b.date - a.date);
