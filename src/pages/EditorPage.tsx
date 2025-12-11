@@ -17,11 +17,13 @@ import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
 import imageCompression from 'browser-image-compression';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
 type NewOutfitPayload = Omit<Outfit, 'id'>;
 export function EditorPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const fromOutfit = location.state?.fromOutfit as Outfit | undefined;
   const fromDate = location.state?.date as Date | undefined;
   const [date, setDate] = useState<Date | undefined>(fromOutfit?.date ? new Date(fromOutfit.date) : fromDate ?? new Date());
@@ -120,19 +122,19 @@ export function EditorPage() {
     );
   }
   return (
-    <div className="min-h-screen bg-background">
+    <div className={cn("min-h-screen bg-background", isMobile && "pb-24")}>
       <ThemeToggle className="fixed top-4 right-4 z-50" />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-8 md:py-10 lg:py-12">
           <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => navigate(-1)} className="h-11 w-11">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-4xl md:text-5xl font-display font-bold">
               {fromOutfit ? 'Dùng lại trang phục' : 'Trang phục mới'}
             </h1>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold">Ảnh</h2>
               <CameraUploader onImagesChange={handleImagesChange} />
@@ -146,7 +148,7 @@ export function EditorPage() {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-full justify-start text-left font-normal mt-2",
+                        "w-full justify-start text-left font-normal mt-2 h-11 text-base",
                         !date && "text-muted-foreground"
                       )}
                     >
@@ -161,7 +163,7 @@ export function EditorPage() {
               </div>
               <div>
                 <label className="font-medium">Tags</label>
-                <div className="flex items-center border rounded-md mt-2">
+                <div className="flex items-center border rounded-md mt-2 min-h-11">
                   <Tag className="h-5 w-5 text-muted-foreground mx-3" />
                   <div className="flex flex-wrap gap-2 p-2 flex-grow">
                     {tags.map(tag => (
@@ -178,7 +180,7 @@ export function EditorPage() {
                       onChange={(e) => setCurrentTag(e.target.value)}
                       onKeyDown={handleTagKeyDown}
                       placeholder="Thêm tag..."
-                      className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-grow h-auto p-0"
+                      className="border-none focus-visible:ring-0 focus-visible:ring-offset-0 flex-grow h-auto p-0 text-base"
                     />
                   </div>
                 </div>
@@ -188,12 +190,19 @@ export function EditorPage() {
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Thời tiết hôm nay, cảm nhận của bạn..."
-                  className="mt-2"
+                  placeholder="Thời tiết h��m nay, cảm nhận của bạn..."
+                  className="mt-2 min-h-28 text-base"
                 />
               </div>
-              <Button onClick={handleSave} disabled={saveMutation.isPending} className="w-full btn-gradient">
-                <Save className="mr-2 h-4 w-4" />
+              <Button 
+                onClick={handleSave} 
+                disabled={saveMutation.isPending} 
+                className={cn(
+                  "w-full btn-gradient h-12 text-lg md:static",
+                  isMobile && "fixed bottom-4 left-4 right-4 z-40"
+                )}
+              >
+                <Save className="mr-2 h-5 w-5" />
                 Lưu trang phục
               </Button>
             </div>

@@ -19,23 +19,23 @@ export function OutfitCard({ outfit, className }: OutfitCardProps) {
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="h-full"
     >
-      <Link to={`/outfits/${outfit.id}`} className="block h-full">
-        <Card className={cn("overflow-hidden rounded-2xl shadow-soft hover:shadow-lg transition-shadow duration-300 h-full flex flex-col", className)}>
-          <div className="relative aspect-[3/4] w-full overflow-hidden group">
+      <Link to={`/outfits/${outfit.id}`} className="block h-full group/link">
+        <Card className={cn("overflow-hidden rounded-2xl shadow-soft group-hover/link:shadow-lg transition-shadow duration-300 h-full flex flex-col", className)}>
+          <div className="relative aspect-[3/4] w-full overflow-hidden">
             <img
               src={outfit.images[0]}
               alt="Outfit"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover/link:scale-105"
             />
             <div className="absolute top-3 right-3">
-              <Button size="icon" variant="secondary" className="rounded-full h-8 w-8 bg-white/80 backdrop-blur-sm hover:bg-white">
-                <Heart className="h-4 w-4 text-muted-foreground" />
+              <Button size="icon" variant="secondary" className="rounded-full h-10 w-10 bg-white/80 backdrop-blur-sm hover:bg-white">
+                <Heart className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
           </div>
-          <CardContent className="p-4 flex-grow flex flex-col justify-between">
+          <CardContent className="p-3 md:p-4 flex-grow flex flex-col justify-between">
             <div>
-              <p className="font-semibold text-foreground">
+              <p className="font-semibold text-base text-foreground">
                 {format(new Date(outfit.date), 'EEEE, dd/MM/yyyy', { locale: vi })}
               </p>
               <p className="text-sm text-muted-foreground">

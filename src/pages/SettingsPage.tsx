@@ -12,7 +12,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { toast, Toaster } from '@/components/ui/sonner';
 const FADE_IN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.2 } },
+  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.2, duration: 0.3 } },
 };
 export function SettingsPage() {
   const [username, setUsername] = useState('');
@@ -34,7 +34,7 @@ export function SettingsPage() {
     if (username.trim()) {
       localStorage.setItem('closetday_user', username.trim());
       setIsLoggedIn(true);
-      toast.success(`Chào m���ng trở lại, ${username.trim()}!`);
+      toast.success(`Chào mừng trở lại, ${username.trim()}!`);
     }
   };
   const handleLogout = () => {
@@ -81,25 +81,26 @@ export function SettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center"><User className="mr-2" /> Tài khoản</CardTitle>
                 <CardDescription>
-                  {isLoggedIn ? `Bạn đang đăng nhập với t��n ${username}.` : 'Đăng nhập để sử dụng các tính năng nâng cao.'}
+                  {isLoggedIn ? `Bạn đang đăng nhập với tên ${username}.` : 'Đăng nhập để sử dụng các tính năng nâng cao.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {!isLoggedIn ? (
-                  <form onSubmit={handleLogin} className="flex items-end gap-4">
-                    <div className="flex-grow">
+                  <form onSubmit={handleLogin} className="flex flex-col sm:flex-row items-end gap-4">
+                    <div className="flex-grow w-full">
                       <Label htmlFor="username">Tên của bạn</Label>
                       <Input
                         id="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         placeholder="Nhập tên của bạn..."
+                        className="h-11 text-base mt-1"
                       />
                     </div>
-                    <Button type="submit">Lưu</Button>
+                    <Button type="submit" className="h-11 w-full sm:w-auto">Lưu</Button>
                   </form>
                 ) : (
-                  <Button variant="outline" onClick={handleLogout}>
+                  <Button variant="outline" onClick={handleLogout} className="h-11 w-full sm:w-auto">
                     <LogOut className="mr-2 h-4 w-4" /> Đăng xuất
                   </Button>
                 )}
@@ -111,7 +112,7 @@ export function SettingsPage() {
                 <CardDescription>Xuất tất cả dữ liệu trang phục của bạn ra file JSON.</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={handleExport} disabled={!isLoggedIn || !outfitsData}>
+                <Button onClick={handleExport} disabled={!isLoggedIn || !outfitsData} className="h-11 w-full sm:w-auto">
                   <Download className="mr-2 h-4 w-4" /> Xuất dữ liệu
                 </Button>
                 {!isLoggedIn && <p className="text-sm text-muted-foreground mt-2">Vui lòng đăng nhập để xuất dữ liệu.</p>}
@@ -119,12 +120,12 @@ export function SettingsPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center"><Image className="mr-2" /> Tối ưu h��nh ảnh</CardTitle>
+                <CardTitle className="flex items-center"><Image className="mr-2" /> Tối ưu hình ảnh</CardTitle>
                 <CardDescription>Lưu ý để có trải nghiệm tốt nhất.</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Để đảm bảo ứng dụng hoạt động nhanh và mượt, hình ảnh bạn tải lên sẽ được tự động nén nếu có dung lượng lớn. Chúng tôi khuyến khích sử dụng ảnh dưới 2MB.
+                  Để đảm b��o ứng dụng hoạt động nhanh và mượt, hình ảnh bạn tải lên sẽ được tự động nén nếu có dung lượng lớn. Chúng tôi khuyến khích sử dụng ảnh dưới 2MB.
                 </p>
               </CardContent>
             </Card>

@@ -13,13 +13,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { OutfitCard } from '@/components/OutfitCard';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 const FADE_IN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
-  visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } },
+  visible: (isMobile: boolean) => ({
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: isMobile ? 0.05 : 0.1, duration: isMobile ? 0.2 : 0.4 },
+  }),
 };
 export function HistoryPage() {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const isMobile = useIsMobile();
   const { data: outfits, isLoading } = useQuery({
     queryKey: ['outfits-all'],
     queryFn: () => api<{ items: Outfit[] }>('/api/outfits?limit=999'), // Fetch all for calendar view
@@ -43,14 +49,15 @@ export function HistoryPage() {
           <motion.div
             initial="hidden"
             animate="visible"
+            custom={isMobile}
             variants={FADE_IN_VARIANTS}
             className="text-center mb-12"
           >
             <h1 className="text-4xl md:text-5xl font-display font-bold">Lịch sử trang phục</h1>
-            <p className="text-muted-foreground mt-2">Xem lại hành trình phong cách của bạn.</p>
+            <p className="text-muted-foreground mt-2">Xem lại hành tr��nh phong cách của bạn.</p>
           </motion.div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-            <motion.div initial="hidden" animate="visible" variants={FADE_IN_VARIANTS} className="lg:col-span-1">
+            <motion.div initial="hidden" animate="visible" custom={isMobile} variants={FADE_IN_VARIANTS} className="lg:col-span-1">
               <Card>
                 <CardContent className="p-2">
                   <Calendar
@@ -61,12 +68,12 @@ export function HistoryPage() {
                     modifiersClassNames={{
                       highlighted: 'bg-primary/20 text-primary-foreground rounded-full',
                     }}
-                    className="p-0"
+                    className="p-0 w-full"
                   />
                 </CardContent>
               </Card>
             </motion.div>
-            <motion.div initial="hidden" animate="visible" variants={FADE_IN_VARIANTS} className="lg:col-span-2">
+            <motion.div initial="hidden" animate="visible" custom={isMobile} variants={FADE_IN_VARIANTS} className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -75,12 +82,12 @@ export function HistoryPage() {
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                       <Skeleton className="aspect-[3/4] rounded-2xl" />
-                      <Skeleton className="aspect-[3/4] rounded-2xl" />
+                      <Skeleton className="aspect-[3/4] rounded-2xl hidden sm:block" />
                     </div>
                   ) : outfitsOnSelectedDate.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                       {outfitsOnSelectedDate.map(outfit => (
                         <OutfitCard key={outfit.id} outfit={outfit} />
                       ))}
@@ -88,7 +95,7 @@ export function HistoryPage() {
                   ) : (
                     <div className="text-center py-12">
                       <p className="text-muted-foreground mb-4">Không có trang phục nào cho ngày này.</p>
-                      <Button onClick={() => navigate('/new', { state: { date: selectedDate } })}>
+                      <Button onClick={() => navigate('/new', { state: { date: selectedDate } })} className="h-11 w-full sm:w-auto">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Thêm trang phục
                       </Button>

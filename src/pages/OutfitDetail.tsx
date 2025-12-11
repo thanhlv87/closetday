@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Tag, Trash2, Copy, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { ArrowLeft, Tag, Trash2, Copy, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { format, subYears } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -57,6 +57,7 @@ export function OutfitDetail() {
     onSwipedLeft: () => nextImage(),
     onSwipedRight: () => prevImage(),
     trackMouse: true,
+    preventDefaultTouchmoveEvent: true,
   });
   const handleExport = () => {
     if (!outfit) return;
@@ -90,7 +91,7 @@ export function OutfitDetail() {
         <div className="text-center">
           <h1 className="text-4xl font-bold">404</h1>
           <p className="text-muted-foreground">Không tìm thấy trang phục.</p>
-          <Button onClick={() => navigate('/gallery')} className="mt-4">Quay lại thư viện</Button>
+          <Button onClick={() => navigate('/gallery')} className="mt-4 h-11">Quay lại thư vi��n</Button>
         </div>
       </div>
     );
@@ -101,16 +102,16 @@ export function OutfitDetail() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-8 md:py-10 lg:py-12">
           <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" size="icon" onClick={() => navigate('/gallery')}>
-              <ArrowLeft className="h-4 w-4" />
+            <Button variant="outline" size="icon" onClick={() => navigate('/gallery')} className="h-11 w-11">
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-3xl md:text-4xl font-display font-bold">Chi ti���t trang phục</h1>
+              <h1 className="text-3xl md:text-4xl font-display font-bold">Chi tiết trang phục</h1>
               <p className="text-muted-foreground">{format(new Date(outfit.date), 'EEEE, dd MMMM, yyyy', { locale: vi })}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            <div {...swipeHandlers} className="relative aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden group cursor-grab active:cursor-grabbing">
+            <div {...swipeHandlers} className="relative aspect-square md:aspect-[3/4] rounded-2xl overflow-hidden group cursor-grab active:cursor-grabbing">
               <AnimatePresence initial={false}>
                 <motion.img
                   key={currentImageIndex}
@@ -125,11 +126,11 @@ export function OutfitDetail() {
               </AnimatePresence>
               {outfit.images.length > 1 && (
                 <>
-                  <Button size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={prevImage}>
-                    <ChevronLeft className="h-5 w-5" />
+                  <Button size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={prevImage}>
+                    <ChevronLeft className="h-6 w-6" />
                   </Button>
-                  <Button size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" onClick={nextImage}>
-                    <ChevronRight className="h-5 w-5" />
+                  <Button size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={nextImage}>
+                    <ChevronRight className="h-6 w-6" />
                   </Button>
                 </>
               )}
@@ -155,11 +156,11 @@ export function OutfitDetail() {
                 <CardHeader>
                   <CardTitle>Hành động</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Xuất</Button>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button variant="outline" onClick={handleExport} className="w-full h-11"><Download className="mr-2 h-4 w-4" /> Xuất</Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={deleteMutation.isPending}><Trash2 className="mr-2 h-4 w-4" /> {deleteMutation.isPending ? 'Đang xoá...' : 'Xoá'}</Button>
+                      <Button variant="destructive" disabled={deleteMutation.isPending} className="w-full h-11"><Trash2 className="mr-2 h-4 w-4" /> {deleteMutation.isPending ? 'Đang xoá...' : 'Xoá'}</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -169,13 +170,13 @@ export function OutfitDetail() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Huỷ</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => deleteMutation.mutate()}>Tiếp tục</AlertDialogAction>
+                        <AlertDialogCancel className="h-11">Huỷ</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteMutation.mutate()} className="h-11">Tiếp tục</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <Link to="/new" state={{ fromOutfit: outfit }} className="col-span-2">
-                    <Button className="w-full"><Copy className="mr-2 h-4 w-4" /> Dùng lại trang phục này</Button>
+                  <Link to="/new" state={{ fromOutfit: outfit }} className="col-span-1 md:col-span-2">
+                    <Button className="w-full h-11"><Copy className="mr-2 h-4 w-4" /> Dùng lại trang phục này</Button>
                   </Link>
                 </CardContent>
               </Card>

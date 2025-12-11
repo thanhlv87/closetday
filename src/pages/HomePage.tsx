@@ -11,11 +11,17 @@ import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OutfitAnalytics } from '@/components/OutfitAnalytics';
+import { useIsMobile } from '@/hooks/use-mobile';
 const FADE_UP_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } },
+  visible: (isMobile: boolean) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: isMobile ? 0.3 : 0.6, ease: 'easeOut' }
+  }),
 };
 export function HomePage() {
+  const isMobile = useIsMobile();
   const { data, isLoading } = useQuery({
     queryKey: ['outfits-home'],
     queryFn: () => api<{ items: Outfit[] }>('/api/outfits?limit=20'), // Fetch more for analytics
@@ -27,7 +33,7 @@ export function HomePage() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
         <Link to="/settings">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="min-h-11 min-w-11">
             <Settings className="h-5 w-5" />
           </Button>
         </Link>
@@ -38,6 +44,7 @@ export function HomePage() {
           <motion.section
             initial="hidden"
             animate="visible"
+            custom={isMobile}
             variants={FADE_UP_VARIANTS}
             className="text-center"
           >
@@ -49,11 +56,12 @@ export function HomePage() {
               Ghi lại phong cách mỗi ngày, tạo nên câu chuyện thời trang của riêng bạn.
             </p>
           </motion.section>
-          <div className="space-y-16 md:space-y-24 mt-12">
+          <div className="space-y-12 md:space-y-24 mt-12">
             <motion.section
               initial="hidden"
               animate="visible"
-              variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.2 }}}}
+              custom={isMobile}
+              variants={{ ...FADE_UP_VARIANTS, visible: (isMobile) => ({ ...FADE_UP_VARIANTS.visible(isMobile), transition: { ...FADE_UP_VARIANTS.visible(isMobile).transition, delay: 0.2 }})}}
             >
               <h2 className="text-2xl font-semibold mb-4">Trang phục hôm nay</h2>
               {isLoading ? (
@@ -82,12 +90,13 @@ export function HomePage() {
             <motion.section
               initial="hidden"
               animate="visible"
-              variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.4 }}}}
+              custom={isMobile}
+              variants={{ ...FADE_UP_VARIANTS, visible: (isMobile) => ({ ...FADE_UP_VARIANTS.visible(isMobile), transition: { ...FADE_UP_VARIANTS.visible(isMobile).transition, delay: 0.4 }})}}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Gợi ý từ quá kh��</h2>
+                <h2 className="text-2xl font-semibold">Gợi ý từ qu�� khứ</h2>
                 <Link to="/gallery">
-                  <Button variant="ghost">Xem tất cả</Button>
+                  <Button variant="ghost" className="min-h-11">Xem tất cả</Button>
                 </Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -108,7 +117,8 @@ export function HomePage() {
             <motion.section
               initial="hidden"
               animate="visible"
-              variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.6 }}}}
+              custom={isMobile}
+              variants={{ ...FADE_UP_VARIANTS, visible: (isMobile) => ({ ...FADE_UP_VARIANTS.visible(isMobile), transition: { ...FADE_UP_VARIANTS.visible(isMobile).transition, delay: 0.6 }})}}
             >
               <OutfitAnalytics />
             </motion.section>
@@ -121,15 +131,15 @@ export function HomePage() {
           animate={{ scale: 1, y: 0 }}
           whileHover={{ scale: 1.1 }}
           transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
-          className="fixed bottom-6 right-6 z-40"
+          className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-40"
         >
-          <Button className="btn-gradient rounded-full h-16 w-16 shadow-lg">
+          <Button className="btn-gradient rounded-full h-14 w-14 md:h-16 md:w-16 shadow-lg">
             <Plus className="h-8 w-8" />
           </Button>
         </motion.div>
       </Link>
       <footer className="text-center py-8 text-muted-foreground/80">
-        <p>Built with ❤�� at Cloudflare</p>
+        <p>Built with ❤��� at Cloudflare</p>
       </footer>
       <Toaster richColors />
     </div>
