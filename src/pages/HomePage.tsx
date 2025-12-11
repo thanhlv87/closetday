@@ -1,148 +1,104 @@
-// Home page of the app, Currently a demo page for demonstration.
-// Please rewrite this file to implement your own logic. Do not delete it to use some other file as homepage. Simply replace the entire contents of this file.
-import { useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { Toaster, toast } from '@/components/ui/sonner'
-import { create } from 'zustand'
-import { useShallow } from 'zustand/react/shallow'
-// import { AppLayout } from '@/components/layout/AppLayout'
-
-// Timer store: independent slice with a clear, minimal API, for demonstration
-type TimerState = {
-  isRunning: boolean;
-  elapsedMs: number;
-  start: () => void;
-  pause: () => void;
-  reset: () => void;
-  tick: (deltaMs: number) => void;
-}
-
-const useTimerStore = create<TimerState>((set) => ({
-  isRunning: false,
-  elapsedMs: 0,
-  start: () => set({ isRunning: true }),
-  pause: () => set({ isRunning: false }),
-  reset: () => set({ elapsedMs: 0, isRunning: false }),
-  tick: (deltaMs) => set((s) => ({ elapsedMs: s.elapsedMs + deltaMs })),
-}))
-
-// Counter store: separate slice to showcase multiple stores without coupling
-type CounterState = {
-  count: number;
-  inc: () => void;
-  reset: () => void;
-}
-
-const useCounterStore = create<CounterState>((set) => ({
-  count: 0,
-  inc: () => set((s) => ({ count: s.count + 1 })),
-  reset: () => set({ count: 0 }),
-}))
-
-function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Plus, Calendar, BarChart2 } from 'lucide-react';
+import { format, isToday } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Toaster } from '@/components/ui/sonner';
+import { OutfitCard } from '@/components/OutfitCard';
+import { MOCK_OUTFITS } from '@shared/mock-data';
+const FADE_UP_VARIANTS = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+};
 export function HomePage() {
-  // Select only what is needed to avoid unnecessary re-renders
-  const { isRunning, elapsedMs } = useTimerStore(
-    useShallow((s) => ({ isRunning: s.isRunning, elapsedMs: s.elapsedMs })),
-  )
-  const start = useTimerStore((s) => s.start)
-  const pause = useTimerStore((s) => s.pause)
-  const resetTimer = useTimerStore((s) => s.reset)
-  const count = useCounterStore((s) => s.count)
-  const inc = useCounterStore((s) => s.inc)
-  const resetCount = useCounterStore((s) => s.reset)
-
-  // Drive the timer only while running; avoid update-depth issues with a scoped RAF
-  useEffect(() => {
-    if (!isRunning) return
-    let raf = 0
-    let last = performance.now()
-    const loop = () => {
-      const now = performance.now()
-      const delta = now - last
-      last = now
-      // Read store API directly to keep effect deps minimal and stable
-      useTimerStore.getState().tick(delta)
-      raf = requestAnimationFrame(loop)
-    }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [isRunning])
-
-  const onPleaseWait = () => {
-    inc()
-    if (!isRunning) {
-      start()
-      toast.success('Building your app…', {
-        description: 'Hang tight, we\'re setting everything up.',
-      })
-    } else {
-      pause()
-      toast.info('Taking a short pause', {
-        description: 'We\'ll continue shortly.',
-      })
-    }
-  }
-
-  const formatted = formatDuration(elapsedMs)
-
+  const todayOutfit = MOCK_OUTFITS.find(o => isToday(new Date(o.date)));
+  const pastOutfits = MOCK_OUTFITS.filter(o => !isToday(new Date(o.date))).slice(0, 3);
   return (
-    // <AppLayout> Uncomment this if you want to use the sidebar
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-        <ThemeToggle />
-        <div className="absolute inset-0 bg-gradient-rainbow opacity-10 dark:opacity-20 pointer-events-none" />
-        <div className="text-center space-y-8 relative z-10 animate-fade-in">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-primary floating">
-              <Sparkles className="w-8 h-8 text-white rotating" />
+    <div className="min-h-screen bg-background text-foreground">
+      <ThemeToggle className="fixed top-4 right-4 z-50" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-8 md:py-10 lg:py-12">
+          <motion.section 
+            initial="hidden"
+            animate="visible"
+            variants={FADE_UP_VARIANTS}
+            className="text-center"
+          >
+            <div className="absolute inset-x-0 top-0 h-[300px] bg-gradient-mesh opacity-10 dark:opacity-20 blur-3xl -z-10" />
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-bold text-balance leading-tight">
+              Hôm nay bạn mặc gì?
+            </h1>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Ghi lại phong cách mỗi ngày, tạo nên câu chuyện thời trang của riêng bạn.
+            </p>
+          </motion.section>
+          <motion.section 
+            initial="hidden"
+            animate="visible"
+            variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.2 }}}}
+            className="mt-12"
+          >
+            <h2 className="text-2xl font-semibold mb-4">Trang phục hôm nay</h2>
+            {todayOutfit ? (
+              <div className="max-w-sm mx-auto">
+                <OutfitCard outfit={todayOutfit} />
+              </div>
+            ) : (
+              <Link to="/new">
+                <div className="relative block w-full rounded-2xl border-2 border-dashed border-muted-foreground/30 p-12 text-center hover:border-primary/50 transition-colors duration-300">
+                  <div className="flex flex-col items-center">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                      <Plus className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <span className="mt-4 block text-lg font-semibold text-foreground">Thêm trang phục hôm nay</span>
+                    <p className="text-muted-foreground">Bạn chưa có trang phục nào cho ngày {format(new Date(), 'dd/MM/yyyy')}</p>
+                  </div>
+                </div>
+              </Link>
+            )}
+          </motion.section>
+          <motion.section 
+            initial="hidden"
+            animate="visible"
+            variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.4 }}}}
+            className="mt-16"
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Gợi ý từ quá khứ</h2>
+              <Link to="/gallery">
+                <Button variant="ghost">Xem tất cả</Button>
+              </Link>
             </div>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
-            Creating your <span className="text-gradient">app</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto text-pretty">
-            Your application would be ready soon.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button 
-              size="lg"
-              onClick={onPleaseWait}
-              className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200"
-              aria-live="polite"
-            >
-              Please Wait
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div>
-              Time elapsed: <span className="font-medium tabular-nums text-foreground">{formatted}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              {pastOutfits.length > 0 ? (
+                pastOutfits.map(outfit => <OutfitCard key={outfit.id} outfit={outfit} />)
+              ) : (
+                <p className="text-muted-foreground col-span-full text-center py-8">Chưa có trang phục nào trong quá khứ.</p>
+              )}
             </div>
-            <div>
-              Coins: <span className="font-medium tabular-nums text-foreground">{count}</span>
-            </div>
-          </div>
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { resetTimer(); resetCount(); toast('Reset complete') }}>
-              Reset
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { inc(); toast('Coin added') }}>
-              Add Coin
-            </Button>
-          </div>
+          </motion.section>
         </div>
-        <footer className="absolute bottom-8 text-center text-muted-foreground/80">
-          <p>Powered by Cloudflare</p>
-        </footer>
-        <Toaster richColors closeButton />
       </div>
-    // </AppLayout> Uncomment this if you want to use the sidebar
-  )
+      {/* Floating Action Button */}
+      <Link to="/new">
+        <motion.div
+          initial={{ scale: 0, y: 50 }}
+          animate={{ scale: 1, y: 0 }}
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
+          className="fixed bottom-6 right-6 z-40"
+        >
+          <Button className="btn-gradient rounded-full h-16 w-16 shadow-lg">
+            <Plus className="h-8 w-8" />
+          </Button>
+        </motion.div>
+      </Link>
+      <footer className="text-center py-8 text-muted-foreground/80">
+        <p>Built with ❤️ at Cloudflare</p>
+      </footer>
+      <Toaster richColors />
+    </div>
+  );
 }

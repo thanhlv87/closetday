@@ -3,22 +3,27 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
 }
-
 // Minimal real-world chat example types (shared by frontend and worker)
 export interface User {
   id: string;
   name: string;
 }
-
 export interface Chat {
-  id: string;
+  id:string;
   title: string;
 }
-
 export interface ChatMessage {
   id: string;
   chatId: string;
   userId: string;
   text: string;
   ts: number; // epoch millis
+}
+// ClosetDay Application Types
+export interface Outfit {
+  id: string;
+  date: number; // epoch millis
+  images: string[];
+  tags: string[];
+  notes?: string;
 }
