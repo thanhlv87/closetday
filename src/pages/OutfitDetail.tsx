@@ -51,8 +51,14 @@ export function OutfitDetail() {
       toast.error(`Xoá thất bại: ${error.message}`);
     },
   });
-  const nextImage = () => outfit && setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
-  const prevImage = () => outfit && setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
+  const nextImage = () => {
+    if (!outfit?.images?.length) return;
+    setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
+  };
+  const prevImage = () => {
+    if (!outfit?.images?.length) return;
+    setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
+  };
   const swipeHandlers = useSwipeable({
     onSwipedLeft: () => nextImage(),
     onSwipedRight: () => prevImage(),
@@ -111,30 +117,41 @@ export function OutfitDetail() {
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            <div {...swipeHandlers} className="relative aspect-square md:aspect-[3/4] rounded-2xl overflow-hidden group cursor-grab active:cursor-grabbing">
-              <AnimatePresence initial={false}>
-                <motion.img
-                  key={currentImageIndex}
-                  src={outfit.images[currentImageIndex]}
-                  alt={`Outfit image ${currentImageIndex + 1}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full h-full object-cover"
-                />
-              </AnimatePresence>
-              {outfit.images.length > 1 && (
-                <>
-                  <Button size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={prevImage}>
-                    <ChevronLeft className="h-6 w-6" />
-                  </Button>
-                  <Button size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={nextImage}>
-                    <ChevronRight className="h-6 w-6" />
-                  </Button>
-                </>
-              )}
-            </div>
+            {(() => {
+              const images = outfit.images ?? [];
+              return (
+                <div {...swipeHandlers} className="relative aspect-square md:aspect-[3/4] rounded-2xl overflow-hidden group cursor-grab active:cursor-grabbing">
+                  <AnimatePresence initial={false}>
+                    {images.length > 0 ? (
+                      <motion.img
+                        key={currentImageIndex}
+                        src={images[currentImageIndex]}
+                        alt={`Outfit image ${currentImageIndex + 1}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted-foreground flex items-center justify-center">
+                        <span className="text-muted-foreground">Không có ảnh</span>
+                      </div>
+                    )}
+                  </AnimatePresence>
+                  {images.length > 1 && (
+                    <>
+                      <Button size="icon" className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={prevImage}>
+                        <ChevronLeft className="h-6 w-6" />
+                      </Button>
+                      <Button size="icon" className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity h-11 w-11" onClick={nextImage}>
+                        <ChevronRight className="h-6 w-6" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
             <div className="space-y-6">
               <Card>
                 <CardHeader>
@@ -144,7 +161,7 @@ export function OutfitDetail() {
                   <div className="flex items-start">
                     <Tag className="h-5 w-5 text-muted-foreground mt-1 mr-3 flex-shrink-0" />
                     <div className="flex flex-wrap gap-2">
-                      {outfit.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                      {(outfit.tags ?? []).map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                     </div>
                   </div>
                   {outfit.notes && (
