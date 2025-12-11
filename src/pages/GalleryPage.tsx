@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LayoutGrid, List, Search } from 'lucide-react';
+import { LayoutGrid, List, Search, Download, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,13 +12,18 @@ import { Link } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useDebounce } from 'react-use';
 const FADE_IN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   visible: { opacity: 1, y: 0 },
 };
 export function GalleryPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [viewMode, setViewMode] = useState('grid');
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
   const {
     data,
     error,
@@ -29,7 +34,7 @@ export function GalleryPage() {
     status,
   } = useInfiniteQuery({
     queryKey: ['outfits'],
-    queryFn: ({ pageParam = null }) => api<{ items: Outfit[]; next: string | null }>(`/api/outfits?cursor=${pageParam || ''}`),
+    queryFn: ({ pageParam = null }) => api<{ items: Outfit[]; next: string | null }>(`/api/outfits?cursor=${pageParam || ''}&limit=12`),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.next,
   });
@@ -41,12 +46,12 @@ export function GalleryPage() {
     } else {
       sorted.sort((a, b) => a.date - b.date);
     }
-    if (!searchTerm) return sorted;
+    if (!debouncedSearchTerm) return sorted;
     return sorted.filter(outfit =>
-      outfit.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      outfit.notes?.toLowerCase().includes(searchTerm.toLowerCase())
+      outfit.tags.some(tag => tag.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+      outfit.notes?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     );
-  }, [allOutfits, searchTerm, sortOrder]);
+  }, [allOutfits, debouncedSearchTerm, sortOrder]);
   return (
     <div className="min-h-screen bg-background">
       <ThemeToggle className="fixed top-4 right-4 z-50" />
@@ -61,11 +66,16 @@ export function GalleryPage() {
           >
             <div>
               <h1 className="text-4xl md:text-5xl font-display font-bold">Thư viện trang phục</h1>
-              <p className="text-muted-foreground mt-2">Nơi lưu giữ tất cả khoảnh khắc thời trang của bạn.</p>
+              <p className="text-muted-foreground mt-2">Nơi lưu giữ tất cả khoảnh kh���c thời trang của bạn.</p>
             </div>
-            <Link to="/new">
-              <Button className="btn-gradient">Thêm trang phục mới</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/history">
+                <Button variant="outline"><Calendar className="mr-2 h-4 w-4" /> Xem lịch</Button>
+              </Link>
+              <Link to="/new">
+                <Button className="btn-gradient">Thêm trang phục mới</Button>
+              </Link>
+            </div>
           </motion.div>
           <motion.div
             initial="hidden"
@@ -92,6 +102,10 @@ export function GalleryPage() {
                 <SelectItem value="oldest">Cũ nhất</SelectItem>
               </SelectContent>
             </Select>
+            <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value)}>
+              <ToggleGroupItem value="grid"><LayoutGrid className="h-4 w-4" /></ToggleGroupItem>
+              <ToggleGroupItem value="list"><List className="h-4 w-4" /></ToggleGroupItem>
+            </ToggleGroup>
           </motion.div>
           {status === 'pending' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
@@ -109,7 +123,10 @@ export function GalleryPage() {
             <AnimatePresence>
               <motion.div
                 layout
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+                className={viewMode === 'grid'
+                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8"
+                  : "space-y-4 max-w-2xl mx-auto"
+                }
               >
                 {filteredOutfits.map((outfit) => (
                   <motion.div layout key={outfit.id} initial="hidden" animate="visible" exit="hidden" variants={FADE_IN_VARIANTS}>
@@ -120,9 +137,11 @@ export function GalleryPage() {
             </AnimatePresence>
           )}
           <div className="mt-12 text-center">
-            <Button onClick={() => fetchNextPage()} disabled={!hasNextPage || isFetchingNextPage}>
-              {isFetchingNextPage ? 'Đang tải...' : hasNextPage ? 'Tải thêm' : 'Không còn trang phục'}
-            </Button>
+            {hasNextPage && (
+              <Button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+                {isFetchingNextPage ? 'Đang tải...' : 'Tải thêm'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

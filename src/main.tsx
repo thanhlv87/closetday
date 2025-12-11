@@ -15,6 +15,8 @@ import { HomePage } from '@/pages/HomePage'
 import { GalleryPage } from '@/pages/GalleryPage';
 import { EditorPage } from '@/pages/EditorPage';
 import { OutfitDetail } from '@/pages/OutfitDetail';
+import { HistoryPage } from '@/pages/HistoryPage';
+import { SettingsPage } from '@/pages/SettingsPage';
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -35,6 +37,16 @@ const router = createBrowserRouter([
   {
     path: "/outfits/:id",
     element: <OutfitDetail />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/history",
+    element: <HistoryPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/settings",
+    element: <SettingsPage />,
     errorElement: <RouteErrorBoundary />,
   },
 ]);

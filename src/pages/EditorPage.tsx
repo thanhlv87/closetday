@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar as CalendarIcon, Tag, Save, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,15 +15,32 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
 import imageCompression from 'browser-image-compression';
+import { Skeleton } from '@/components/ui/skeleton';
 type NewOutfitPayload = Omit<Outfit, 'id'>;
 export function EditorPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [tags, setTags] = useState<string[]>([]);
+  const fromOutfit = location.state?.fromOutfit as Outfit | undefined;
+  const fromDate = location.state?.date as Date | undefined;
+  const [date, setDate] = useState<Date | undefined>(fromOutfit?.date ? new Date(fromOutfit.date) : fromDate ?? new Date());
+  const [tags, setTags] = useState<string[]>(fromOutfit?.tags || []);
   const [currentTag, setCurrentTag] = useState('');
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState(fromOutfit?.notes || '');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  useEffect(() => {
+    if (fromOutfit) {
+      toast.info('Dữ liệu trang phục đã được điền sẵn. Hãy thêm ảnh mới!');
+    }
+  }, [fromOutfit]);
+  const handleImagesChange = (files: File[]) => {
+    files.forEach(file => {
+      if (file.size > 1 * 1024 * 1024) { // 1MB
+        toast.warning(`Ảnh "${file.name}" có dung lượng lớn và sẽ được nén.`, { duration: 5000 });
+      }
+    });
+    setImageFiles(files);
+  };
   const saveMutation = useMutation({
     mutationFn: async (newOutfit: NewOutfitPayload) => {
       const compressedImages = await Promise.all(
@@ -43,7 +59,7 @@ export function EditorPage() {
               reader.readAsDataURL(compressedFile);
             });
           } catch (error) {
-            toast.error('Lỗi nén ảnh.');
+            toast.error('L���i nén ảnh.');
             throw error;
           }
         })
@@ -55,8 +71,10 @@ export function EditorPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['outfits'] });
+      queryClient.invalidateQueries({ queryKey: ['outfits-all'] });
+      queryClient.invalidateQueries({ queryKey: ['outfits-home'] });
       toast.success('Lưu trang phục thành công!');
-      navigate('/gallery');
+      setTimeout(() => navigate('/gallery'), 1000);
     },
     onError: (error) => {
       toast.error(`Lưu thất bại: ${error.message}`);
@@ -90,6 +108,16 @@ export function EditorPage() {
       notes,
     });
   };
+  if (saveMutation.isPending) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <Skeleton className="h-16 w-16 rounded-full mb-4" />
+        <h2 className="text-2xl font-semibold mb-2">Đang xử lý và lưu...</h2>
+        <p className="text-muted-foreground">Vui lòng chờ trong giây lát.</p>
+        <Skeleton className="h-2 w-64 mt-4 rounded-full" />
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-background">
       <ThemeToggle className="fixed top-4 right-4 z-50" />
@@ -99,12 +127,14 @@ export function EditorPage() {
             <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-4xl md:text-5xl font-display font-bold">Trang phục mới</h1>
+            <h1 className="text-4xl md:text-5xl font-display font-bold">
+              {fromOutfit ? 'D��ng lại trang phục' : 'Trang phục mới'}
+            </h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold">Ảnh</h2>
-              <CameraUploader onImagesChange={setImageFiles} />
+              <CameraUploader onImagesChange={handleImagesChange} />
             </div>
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold">Thông tin</h2>
@@ -120,16 +150,11 @@ export function EditorPage() {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : <span>Chọn ngày</span>}
+                      {date ? format(date, "PPP", { locale: vi }) : <span>Chọn ngày</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={date}
-                      onSelect={setDate}
-                      initialFocus
-                    />
+                    <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -168,7 +193,7 @@ export function EditorPage() {
               </div>
               <Button onClick={handleSave} disabled={saveMutation.isPending} className="w-full btn-gradient">
                 <Save className="mr-2 h-4 w-4" />
-                {saveMutation.isPending ? 'Đang lưu...' : 'Lưu trang phục'}
+                Lưu trang phục
               </Button>
             </div>
           </div>

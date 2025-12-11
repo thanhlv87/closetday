@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit, Tag, Trash2, Copy, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Edit, Tag, Trash2, Copy, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { format, subYears } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +15,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api-client';
 import type { Outfit } from '@shared/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { OutfitCard } from '@/components/OutfitCard';
 export function OutfitDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -24,6 +26,20 @@ export function OutfitDetail() {
     queryFn: () => api<Outfit>(`/api/outfits/${id}`),
     enabled: !!id,
   });
+  const { data: relatedOutfitsData } = useQuery({
+    queryKey: ['outfits-related', id],
+    queryFn: () => api<{ items: Outfit[] }>('/api/outfits?limit=999'),
+    enabled: !!outfit,
+  });
+  const sameDayLastYearOutfit = React.useMemo(() => {
+    if (!outfit || !relatedOutfitsData?.items) return null;
+    const lastYearDate = subYears(new Date(outfit.date), 1);
+    return relatedOutfitsData.items.find(o =>
+      new Date(o.date).getDate() === lastYearDate.getDate() &&
+      new Date(o.date).getMonth() === lastYearDate.getMonth() &&
+      new Date(o.date).getFullYear() === lastYearDate.getFullYear()
+    );
+  }, [outfit, relatedOutfitsData]);
   const deleteMutation = useMutation({
     mutationFn: () => api(`/api/outfits/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
@@ -35,9 +51,26 @@ export function OutfitDetail() {
       toast.error(`Xoá thất bại: ${error.message}`);
     },
   });
+  const nextImage = () => outfit && setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
+  const prevImage = () => outfit && setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => nextImage(),
+    onSwipedRight: () => prevImage(),
+    trackMouse: true,
+  });
+  const handleExport = () => {
+    if (!outfit) return;
+    const dataStr = JSON.stringify(outfit, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = `outfit_${outfit.id}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-8">
+      <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
         <div className="max-w-5xl mx-auto">
           <Skeleton className="h-10 w-1/3 mb-8" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -62,9 +95,6 @@ export function OutfitDetail() {
       </div>
     );
   }
-  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % outfit.images.length);
-  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + outfit.images.length) % outfit.images.length);
-  const handleDelete = () => deleteMutation.mutate();
   return (
     <div className="min-h-screen bg-background">
       <ThemeToggle className="fixed top-4 right-4 z-50" />
@@ -75,12 +105,12 @@ export function OutfitDetail() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
-              <h1 className="text-3xl md:text-4xl font-display font-bold">Chi tiết trang phục</h1>
+              <h1 className="text-3xl md:text-4xl font-display font-bold">Chi ti���t trang phục</h1>
               <p className="text-muted-foreground">{format(new Date(outfit.date), 'EEEE, dd MMMM, yyyy', { locale: vi })}</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="relative aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden group">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div {...swipeHandlers} className="relative aspect-square lg:aspect-[3/4] rounded-2xl overflow-hidden group cursor-grab active:cursor-grabbing">
               <AnimatePresence initial={false}>
                 <motion.img
                   key={currentImageIndex}
@@ -126,10 +156,10 @@ export function OutfitDetail() {
                   <CardTitle>Hành động</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
-                  <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Sửa</Button>
+                  <Button variant="outline" onClick={handleExport}><Download className="mr-2 h-4 w-4" /> Xuất</Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="destructive" disabled={deleteMutation.isPending}><Trash2 className="mr-2 h-4 w-4" /> Xoá</Button>
+                      <Button variant="destructive" disabled={deleteMutation.isPending}><Trash2 className="mr-2 h-4 w-4" /> {deleteMutation.isPending ? 'Đang xoá...' : 'Xoá'}</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
@@ -140,7 +170,7 @@ export function OutfitDetail() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Huỷ</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Tiếp tục</AlertDialogAction>
+                        <AlertDialogAction onClick={() => deleteMutation.mutate()}>Tiếp tục</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -151,6 +181,14 @@ export function OutfitDetail() {
               </Card>
             </div>
           </div>
+          {sameDayLastYearOutfit && (
+            <div className="mt-16">
+              <h2 className="text-2xl font-semibold mb-4">Cùng ngày này năm ngoái</h2>
+              <div className="max-w-sm">
+                <OutfitCard outfit={sameDayLastYearOutfit} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <Toaster richColors />
