@@ -77,7 +77,11 @@ function updateWranglerJsonc() {
 }
 
 function runSetupCommands() {
-    const commands = [];
+    const commands = [
+    "bun add react-image-crop@^10.0.8",
+    "bun add browser-image-compression@^2.0.2",
+    "bun add react-webcam@^7.0.1"
+];
     
     if (commands.length === 0) {
         console.log('⊘ No setup commands to run');
