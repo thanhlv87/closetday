@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar as CalendarIcon, Tag, Save, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -59,7 +60,7 @@ export function EditorPage() {
               reader.readAsDataURL(compressedFile);
             });
           } catch (error) {
-            toast.error('L���i nén ảnh.');
+            toast.error('Lỗi nén ảnh.');
             throw error;
           }
         })
@@ -128,7 +129,7 @@ export function EditorPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-4xl md:text-5xl font-display font-bold">
-              {fromOutfit ? 'D��ng lại trang phục' : 'Trang phục mới'}
+              {fromOutfit ? 'Dùng lại trang phục' : 'Trang phục mới'}
             </h1>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

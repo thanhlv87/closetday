@@ -24,7 +24,7 @@ export function HistoryPage() {
     queryKey: ['outfits-all'],
     queryFn: () => api<{ items: Outfit[] }>('/api/outfits?limit=999'), // Fetch all for calendar view
   });
-  const allOutfits = outfits?.items ?? [];
+  const allOutfits = useMemo(() => outfits?.items ?? [], [outfits]);
   const outfitDates = useMemo(() => {
     return allOutfits.map(outfit => new Date(outfit.date));
   }, [allOutfits]);
@@ -70,7 +70,7 @@ export function HistoryPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    Trang phục ng��y {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: vi }) : '...'}
+                    Trang phục ngày {selectedDate ? format(selectedDate, 'dd/MM/yyyy', { locale: vi }) : '...'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

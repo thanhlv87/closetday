@@ -13,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { OutfitAnalytics } from '@/components/OutfitAnalytics';
 const FADE_UP_VARIANTS = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 export function HomePage() {
   const { data, isLoading } = useQuery({
@@ -85,7 +85,7 @@ export function HomePage() {
               variants={{ ...FADE_UP_VARIANTS, visible: { ...FADE_UP_VARIANTS.visible, transition: { ...FADE_UP_VARIANTS.visible.transition, delay: 0.4 }}}}
             >
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Gợi ý từ qu�� khứ</h2>
+                <h2 className="text-2xl font-semibold">Gợi ý từ quá kh��</h2>
                 <Link to="/gallery">
                   <Button variant="ghost">Xem tất cả</Button>
                 </Link>
