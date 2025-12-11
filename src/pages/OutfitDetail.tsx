@@ -58,7 +58,7 @@ export function OutfitDetail() {
     onSwipedRight: () => prevImage(),
     trackMouse: true,
     preventDefaultTouchmoveEvent: true,
-  });
+  } as any);
   const handleExport = () => {
     if (!outfit) return;
     const dataStr = JSON.stringify(outfit, null, 2);

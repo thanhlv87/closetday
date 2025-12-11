@@ -17,9 +17,9 @@ const FADE_UP_VARIANTS = {
   visible: (isMobile: boolean) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: isMobile ? 0.3 : 0.6, ease: 'easeOut' }
+    transition: { duration: isMobile ? 0.3 : 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
   }),
-};
+} as any;
 export function HomePage() {
   const isMobile = useIsMobile();
   const { data, isLoading } = useQuery({
